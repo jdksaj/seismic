@@ -1,99 +1,88 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
-<title>地震仪监控地图</title>
-
-<!-- 高德地图JS -->
-<script src="https://webapi.amap.com/maps?v=2.0&key=f72776f86d81aef8dfe32c6aa4b6d7f7"></script>
-
-<style>
-html,body,#container{
-    width:100%;
-    height:100%;
-    margin:0;
-}
-</style>
-
+    <meta charset="utf-8">
+    <title>地震仪监控地图</title>
+    <script src="https://webapi.amap.com/maps?v=2.0&key=f72776f86d81aef8dfe32c6aa4b6d7f7"></script>
+    <style>
+        html, body, #container {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+        }
+    </style>
 </head>
-
 <body>
 
 <div id="container"></div>
 
 <script>
-
-// 1. 创建地图
-var map = new AMap.Map('container',{
-    zoom:5,
-    center:[116.397428,39.90923]
-});
-
-// 2. 图标
-var stationIcon = new AMap.Icon({
-    image:"https://jdksaj.github.io/seismic/qq.png",
-    size:new AMap.Size(32,32),
-    imageSize:new AMap.Size(32,32)
-});
-
-// 3. 添加 marker 函数
-function addMarkers(devices){
-    var markers = [];
-    devices.forEach(d => {
-        if(d.lng && d.lat){
-            var marker = new AMap.Marker({
-                position:[d.lng,d.lat],
-                title:d.name,
-                icon:stationIcon
-            });
-            marker.setMap(map);
-            markers.push(marker);
-
-            // 点击显示站点名称
-            var infoWindow = new AMap.InfoWindow({
-                content: d.name,
-                offset: new AMap.Pixel(0,-30)
-            });
-            marker.on('click', function(){
-                infoWindow.open(map, marker.getPosition());
-            });
-        }
+    // 1. 创建地图
+    var map = new AMap.Map('container', {
+        zoom: 5,
+        center: [116.397428, 39.90923]
     });
 
-    // 自动缩放地图，让所有 marker 都可见
-    if(markers.length > 0){
-        map.setFitView(markers);
+    // 2. 图标
+    var stationIcon = new AMap.Icon({
+        image: "https://jdksaj.github.io/seismic/qq.png",
+        size: new AMap.Size(32, 32),
+        imageSize: new AMap.Size(32, 32)
+    });
+
+    // 3. 渲染 Marker 函数
+    function renderMarkers(devices) {
+        if (!devices || devices.length === 0) return;
+        
+        var markers = [];
+        devices.forEach(d => {
+            if (d.lng && d.lat) {
+                var marker = new AMap.Marker({
+                    position: [d.lng, d.lat],
+                    title: d.name,
+                    icon: stationIcon
+                });
+                marker.setMap(map);
+                markers.push(marker);
+
+                var infoWindow = new AMap.InfoWindow({
+                    content: `<div style="padding:5px;">站点: ${d.name}</div>`,
+                    offset: new AMap.Pixel(0, -30)
+                });
+                
+                marker.on('click', function() {
+                    infoWindow.open(map, marker.getPosition());
+                });
+            }
+        });
+
+        // 自动缩放地图，让所有 marker 都可见
+        if (markers.length > 0) {
+            map.setFitView(markers);
+        }
     }
-}
 
-// 4. fetch 数据
-fetch("https://internidal-kathlene-accusatorial.ngrok-free.dev/api/devices", {
-    headers: {
-        "ngrok-skip-browser-warning": "69420" // 这是一个魔法值，加上它就能直接拿到 JSON
-    }
-})
-.then(res => {
-    if(!res.ok) throw new Error("HTTP错误 " + res.status);
-    return res.json();
-})
-.then(devices => {
-    console.log("获取到设备数据:", devices);
-    addMarkers(devices);
-})
-.catch(err => {
-    console.error("加载设备失败:", err);
+    // 4. 获取数据并渲染
+    // 在 URL 后面加上了跳过警告的参数，并保留了 Headers 魔法值，双重保险
+    const apiUrl = "https://internidal-kathlene-accusatorial.ngrok-free.dev/api/devices?ngrok-skip-browser-warning=true";
 
-    // 如果 fetch 失败，使用本地模拟数据测试
-    const devices = [
-        {"name":"STA001","lng":116.39,"lat":39.9},
-        {"name":"STA002","lng":117.2,"lat":39.08},
-        {"name":"STA003","lng":120.47,"lat":38.23}
-    ];
-    addMarkers(devices);
-});
-
+    fetch(apiUrl, {
+        headers: {
+            "ngrok-skip-browser-warning": "69420"
+        }
+    })
+    .then(res => {
+        if (!res.ok) throw new Error(`HTTP 状态异常: ${res.status}`);
+        return res.json();
+    })
+    .then(data => {
+        console.log("成功获取后端数据:", data);
+        renderMarkers(data);
+    })
+    .catch(err => {
+        // 如果依然报错 Unexpected token '<'，请手动在浏览器打开上面的 apiUrl 点击 "Visit Site"
+        console.error("地图数据渲染失败:", err);
+    });
 </script>
 </body>
 </html>
-
-
