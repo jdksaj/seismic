@@ -67,7 +67,11 @@ function addMarkers(devices){
 }
 
 // 4. fetch 数据
-fetch("https://internidal-kathlene-accusatorial.ngrok-free.dev/api/devices")
+fetch("https://internidal-kathlene-accusatorial.ngrok-free.dev/api/devices", {
+    headers: {
+        "ngrok-skip-browser-warning": "69420" // 这是一个魔法值，加上它就能直接拿到 JSON
+    }
+})
 .then(res => {
     if(!res.ok) throw new Error("HTTP错误 " + res.status);
     return res.json();
@@ -91,4 +95,5 @@ fetch("https://internidal-kathlene-accusatorial.ngrok-free.dev/api/devices")
 </script>
 </body>
 </html>
+
 
