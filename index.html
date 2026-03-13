@@ -23,43 +23,73 @@ html,body,#container{
 
 <script>
 
-// 1 创建地图
+// 1. 创建地图
 var map = new AMap.Map('container',{
     zoom:5,
     center:[116.397428,39.90923]
 });
 
+// 2. 图标
 var stationIcon = new AMap.Icon({
     image:"https://jdksaj.github.io/seismic/qq.png",
     size:new AMap.Size(32,32),
     imageSize:new AMap.Size(32,32)
 });
 
-fetch("https://internidal-kathlene-accusatorial.ngrok-free.dev/api/devices")
-.then(res => res.json())
-.then(devices => {
+// 3. 添加 marker 函数
+function addMarkers(devices){
+    var markers = [];
+    devices.forEach(d => {
+        if(d.lng && d.lat){
+            var marker = new AMap.Marker({
+                position:[d.lng,d.lat],
+                title:d.name,
+                icon:stationIcon
+            });
+            marker.setMap(map);
+            markers.push(marker);
 
-    devices.forEach(function(d){
-
-        var marker = new AMap.Marker({
-            position:[d.lng,d.lat],
-            title:d.name,
-            icon:stationIcon
-        });
-
-        marker.setMap(map);
-
+            // 点击显示站点名称
+            var infoWindow = new AMap.InfoWindow({
+                content: d.name,
+                offset: new AMap.Pixel(0,-30)
+            });
+            marker.on('click', function(){
+                infoWindow.open(map, marker.getPosition());
+            });
+        }
     });
 
+    // 自动缩放地图，让所有 marker 都可见
+    if(markers.length > 0){
+        map.setFitView(markers);
+    }
+}
+
+// 4. fetch 数据
+fetch("https://internidal-kathlene-accusatorial.ngrok-free.dev/api/devices")
+.then(res => {
+    if(!res.ok) throw new Error("HTTP错误 " + res.status);
+    return res.json();
+})
+.then(devices => {
+    console.log("获取到设备数据:", devices);
+    addMarkers(devices);
+})
+.catch(err => {
+    console.error("加载设备失败:", err);
+
+    // 如果 fetch 失败，使用本地模拟数据测试
+    const devices = [
+        {"name":"STA001","lng":116.39,"lat":39.9},
+        {"name":"STA002","lng":117.2,"lat":39.08},
+        {"name":"STA003","lng":121.47,"lat":31.23},
+        {"name":"STA003","lng":120.47,"lat":30.23},
+        {"name":"STA003","lng":120.47,"lat":38.23}
+    ];
+    addMarkers(devices);
 });
 
 </script>
 </body>
-
 </html>
-
-
-
-
-
-
