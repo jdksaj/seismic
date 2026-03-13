@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>地震仪监控地图</title>
+
+<!-- 高德地图JS -->
+<script src="https://webapi.amap.com/maps?v=2.0&key=f72776f86d81aef8dfe32c6aa4b6d7f7"></script>
+
+<style>
+html,body,#container{
+    width:100%;
+    height:100%;
+    margin:0;
+}
+</style>
+
+</head>
+
+<body>
+
+<div id="container"></div>
+
+<script>
+
+// 1 创建地图
+var map = new AMap.Map('container',{
+    zoom:5,
+    center:[116.397428,39.90923]
+});
+
+var stationIcon = new AMap.Icon({
+    image:"qq.png",
+    size:new AMap.Size(32,32),
+    imageSize:new AMap.Size(32,32)
+});
+
+fetch("https://localhost:7278/api/devices")
+.then(res => res.json())
+.then(devices => {
+
+    devices.forEach(function(d){
+
+        var marker = new AMap.Marker({
+            position:[d.lng,d.lat],
+            title:d.name,
+            icon:stationIcon
+        });
+
+        marker.setMap(map);
+
+    });
+
+});
+
+</script>
+</body>
+</html>
