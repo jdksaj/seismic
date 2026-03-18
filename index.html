@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>地震仪监控地图</title>
+    <!-- 高德地图 JS SDK -->
     <script src="https://webapi.amap.com/maps?v=2.0&key=f72776f86d81aef8dfe32c6aa4b6d7f7"></script>
     <style>
         html, body, #container {
@@ -25,7 +26,7 @@
 
     // 2. 图标
     var stationIcon = new AMap.Icon({
-        image: "https://jdksaj.github.io/seismic/qq.png",
+        image: "https://jdksaj.github.io/seismic/qq.png", // 自定义图标
         size: new AMap.Size(32, 32),
         imageSize: new AMap.Size(32, 32)
     });
@@ -33,23 +34,26 @@
     // 3. 渲染 Marker 函数
     function renderMarkers(devices) {
         if (!devices || devices.length === 0) return;
-        
+
         var markers = [];
-        devices.forEach(d => {
-            if (d.lng && d.lat) {
+        devices.forEach((d, index) => {
+            // 前端给默认 name
+            const name = d.name || "站点" + index;
+
+            if (d.lng !== undefined && d.lat !== undefined) {
                 var marker = new AMap.Marker({
                     position: [d.lng, d.lat],
-                    title: d.name,
+                    title: name,
                     icon: stationIcon
                 });
                 marker.setMap(map);
                 markers.push(marker);
 
                 var infoWindow = new AMap.InfoWindow({
-                    content: `<div style="padding:5px;">站点: ${d.name}</div>`,
+                    content: `<div style="padding:5px;">站点: ${name}</div>`,
                     offset: new AMap.Pixel(0, -30)
                 });
-                
+
                 marker.on('click', function() {
                     infoWindow.open(map, marker.getPosition());
                 });
@@ -63,14 +67,9 @@
     }
 
     // 4. 获取数据并渲染
-    // 在 URL 后面加上了跳过警告的参数，并保留了 Headers 魔法值，双重保险
     const apiUrl = "http://106.54.233.158:8080/api/data";
 
-    fetch(apiUrl, {
-        headers: {
-            "ngrok-skip-browser-warning": "69420"
-        }
-    })
+    fetch(apiUrl)
     .then(res => {
         if (!res.ok) throw new Error(`HTTP 状态异常: ${res.status}`);
         return res.json();
@@ -80,9 +79,9 @@
         renderMarkers(data);
     })
     .catch(err => {
-        // 如果依然报错 Unexpected token '<'，请手动在浏览器打开上面的 apiUrl 点击 "Visit Site"
         console.error("地图数据渲染失败:", err);
     });
 </script>
+
 </body>
 </html>
